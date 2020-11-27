@@ -7,9 +7,7 @@ class LoginStore = _LoginStore with _$LoginStore;
 abstract class _LoginStore with Store {
   //constructor
   _LoginStore() {
-    autorun((_) {
-      print(isFormValid);
-    });
+    autorun((_) {});
   }
 
   @observable
@@ -32,6 +30,13 @@ abstract class _LoginStore with Store {
   @action
   void setPassword(String value) => password = value;
 
+  //loading login
+  @observable
+  bool loading = false;
+
+  @observable
+  bool loggedIn = false;
+
   //validação dos campos
   @computed
   bool get isEmailValid => RegExp(
@@ -41,8 +46,26 @@ abstract class _LoginStore with Store {
   @computed
   bool get isPasswordValid => password.length >= 6;
 
+  // @computed
+  // bool get isFormValid => isEmailValid && isPasswordValid;
+
   @computed
-  bool get isFormValid => isEmailValid && isPasswordValid;
+  Function get loginPressed =>
+      (isEmailValid && isPasswordValid && !loading) ? login : null;
+
+  //funcao login
+  @action
+  Future<void> login() async {
+    loading = true;
+
+    //processar
+    await Future.delayed(Duration(seconds: 3));
+
+    loading = false;
+
+    //quando logar
+    loggedIn = true;
+  }
 }
 
 //flutter packages pub run build_runner watch
