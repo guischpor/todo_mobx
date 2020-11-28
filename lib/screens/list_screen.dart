@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:todomobx/stores/list_store.dart';
 import 'package:todomobx/widgets/custom_icon_button.dart';
 import 'package:todomobx/widgets/custom_text_field.dart';
 
@@ -10,6 +12,10 @@ class ListScreen extends StatefulWidget {
 }
 
 class _ListScreenState extends State<ListScreen> {
+  final ListStore listStore = ListStore();
+
+  final TextEditingController textController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -53,31 +59,59 @@ class _ListScreenState extends State<ListScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: <Widget>[
-                        CustomTextField(
-                          hint: 'Tarefa',
-                          onChanged: (todo) {},
-                          suffix: CustomIconButton(
-                            radius: 32,
-                            iconData: Icons.add,
-                            onTap: () {},
-                          ),
+                        Observer(
+                          builder: (_) {
+                            return CustomTextField(
+                                controller: textController,
+                                hint: 'Tarefa',
+                                onChanged: listStore.setNewTodoTitle,
+                                suffix: listStore.isFormValid
+                                    ? CustomIconButton(
+                                        radius: 32,
+                                        iconData: Icons.add,
+                                        onTap: () {
+                                          listStore.addTodo();
+                                          textController.clear();
+                                          // WidgetsBinding.instance
+                                          //     .addPostFrameCallback((_) =>
+                                          //         textController.clear());
+                                        },
+                                      )
+                                    : null);
+                          },
                         ),
                         const SizedBox(
                           height: 8,
                         ),
                         Expanded(
-                          child: ListView.separated(
-                            itemCount: 10,
-                            itemBuilder: (_, index) {
-                              return ListTile(
-                                title: Text(
-                                  'Item $index',
-                                ),
-                                onTap: () {},
+                          child: Observer(
+                            builder: (_) {
+                              return ListView.separated(
+                                itemCount: listStore.todoList.length,
+                                itemBuilder: (_, index) {
+                                  final todo = listStore.todoList[index];
+                                  return Observer(
+                                    builder: (_) {
+                                      return ListTile(
+                                        title: Text(
+                                          todo.title,
+                                          style: TextStyle(
+                                              decoration: todo.done
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                              color: todo.done
+                                                  ? Colors.grey
+                                                  : Colors.black),
+                                        ),
+                                        onTap: todo.toggleDone,
+                                      );
+                                    },
+                                  );
+                                },
+                                separatorBuilder: (_, __) {
+                                  return Divider();
+                                },
                               );
-                            },
-                            separatorBuilder: (_, __) {
-                              return Divider();
                             },
                           ),
                         ),
